@@ -1,0 +1,5 @@
+lst = []
+for num in range(7801, 8853):
+    num_1= (num //1000) + (num//100)%10 +(num//10)%10
+    lst.append(num_1)
+lst
