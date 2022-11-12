@@ -10,6 +10,8 @@ services:
       - "9001:9001"
     volumes:
       - ./proxy:/etc/nginx/conf.d
+    depends_on:
+      - minio
 
   address_parser:
     build: ../address-parser-service/app
@@ -22,7 +24,7 @@ services:
     volumes:
       - ../address-parser-service/app:/app
     deploy:
-      replicas: 2
+      replicas: 1
     command: uvicorn entry_point:app --port 660 --host 0.0.0.0
 
   geocoding:
@@ -31,15 +33,20 @@ services:
     expose:
       - 660
     environment:
-      - END_POINT=/geocoding/geocode
-      - GET_GEO_DATA_END_POINT=/geocoding/get_geo_data
+      - GEOCODE_ENDPOINT=/geocoding/geocode
+      - GET_GEO_DATA_ENDPOINT=/geocoding/get_geo_data
+      - PUT_NEW_NAME_ENDPOINT=/geocoding/put_new_name
+      - REMOVE_FIELD_ENDPOINT=/geocoding/remove_field
       - ADDRESS_PARSER_URL=http://proxy:80/address_parser/parse
       - ELASTICSEARCH_URL=http://elasticsearch:9200
     volumes:
       - ../geocoding-api/app:/app
     deploy:
-      replicas: 2
+      replicas: 1
     command: uvicorn entry_point:app --host 0.0.0.0 --port 660
+    depends_on:
+      - elasticsearch
+      - address_parser
 
   region_identifier:
     build: ../region_identifier/app
@@ -53,6 +60,9 @@ services:
     volumes:
       - ../region_identifier/app:/app
     command: uvicorn entry_point:app --host 0.0.0.0 --port 660
+    depends_on:
+      - elasticsearch
+      - geocoding
 
   # Audio
   audio_diarization:
@@ -65,7 +75,7 @@ services:
     volumes:
       - ../audio_diarization/app:/app
     deploy:
-      replicas: 2
+      replicas: 1
     command: uvicorn entry_point:app --host 0.0.0.0 --port 660
 
   speech_to_text:
@@ -79,7 +89,7 @@ services:
     volumes:
       - ../speech_to_text/app:/app
     deploy:
-      replicas: 2
+      replicas: 1
     command: uvicorn entry_point:app --host 0.0.0.0 --port 660
 
   audio_gender_recognition:
@@ -88,7 +98,7 @@ services:
     expose:
       - 660
     deploy:
-      replicas: 2
+      replicas: 1
     environment:
       - GENDER_ENDPOINT=/speech/gender
     volumes:
@@ -102,7 +112,7 @@ services:
     expose:
       - 660
     deploy:
-      replicas: 2
+      replicas: 1
     environment:
       - STT_PUT_DATA_ENDPOINT=/ai/labeling/stt_put_data
       - STT_UPDATE_ENDPOINT=/ai/labeling/stt_update_data
@@ -124,7 +134,7 @@ services:
     build: ../speech_to_text_stream/app
     restart: always
     deploy:
-      replicas: 2
+      replicas: 1
     environment:
       - IN_STT_TOPIC=STT_IN_TOPIC
       - OUT_STT_TOPIC=STT_OUT_TOPIC
@@ -133,12 +143,13 @@ services:
     command: python entry_point.py
     depends_on:
       - kafka
+      - minio
 
   audio_gender_recognition_stream:
     build: ../audio_gender_recognition_stream/app
     restart: always
     deploy:
-      replicas: 2
+      replicas: 1
     environment:
       - AUDIO_GENDER_IN_TOPIC=AUDIO_GENDER_IN_TOPIC
       - AUDIO_GENDER_OUT_TOPIC=AUDIO_GENDER_OUT_TOPIC
@@ -147,6 +158,7 @@ services:
     command: python entry_point.py
     depends_on:
       - kafka
+      - minio
 
   update_db_gender:
     build: ../labeling-database/update_db_gender
@@ -262,6 +274,8 @@ services:
       - "9011:80"
     volumes:
       - ./pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
 
   # stream
   kafdrop:
