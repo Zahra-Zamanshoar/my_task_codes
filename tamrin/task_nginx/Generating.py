@@ -122,14 +122,14 @@ def title(name):
     return f'{title} \n   set ${name}_upstream http://{name};\n \n'
 
 
-# parser = argparse.ArgumentParser(description='The file  want to make negix from')
-# parser.add_argument("--docker", help='The file  want to make negix from', default='docker-compose.yml')
-# args = parser.parse_args()
-# docker = args.docker()
+parser = argparse.ArgumentParser(description='The file  want to make negix from')
+parser.add_argument("--docker", help='The file  want to make negix from')
+args = parser.parse_args()
+doc = args.docker()
 
 # Creating a dictionary of titles along with endpoints
 dic = dict()
-with open('docker-compose.yml', encoding="utf-8") as docker_file:
+with open(doc, encoding="utf-8") as docker_file:
     deta = docker_file.readlines()
     for line in deta:
         count = 0
