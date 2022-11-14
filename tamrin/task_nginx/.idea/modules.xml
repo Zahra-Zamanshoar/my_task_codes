@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/task.iml" filepath="$PROJECT_DIR$/.idea/task.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/task_nginx.iml" filepath="$PROJECT_DIR$/.idea/task_nginx.iml" />
     </modules>
   </component>
 </project>
